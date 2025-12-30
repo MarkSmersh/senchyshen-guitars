@@ -14,7 +14,7 @@ func (fs AssetsFS) Open(name string) (http.File, error) {
 	file, err := fs.fs.Open(name)
 
 	if err != nil {
-		file, err = os.Open("assets/cc.jpg")
+		file, err = os.Open("assets/default.png")
 
 		if err != nil {
 			return nil, err

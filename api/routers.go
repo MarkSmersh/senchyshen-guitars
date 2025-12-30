@@ -8,6 +8,7 @@ func (s *Server) SetRouters() {
 	s.OrdersRouter()
 	s.CartsRouter()
 	s.ConstuctorsRouter()
+	s.PreviewRouter()
 }
 
 func (s *Server) HealthyRouter() {
@@ -19,7 +20,7 @@ func (s *Server) HealthyRouter() {
 func (s *Server) ProductsRouter() {
 	g := s.R.Group("/products")
 
-	g.GET("/", s.ProductsGet)
+	g.POST("/", s.ProductsGet)
 	g.GET("/:pid", s.ProductsGetSlug)
 }
 
@@ -51,4 +52,10 @@ func (s *Server) ConstuctorsRouter() {
 	g := s.R.Group("/constructors")
 
 	g.POST("/", s.ConstructorsPost)
+}
+
+func (s *Server) PreviewRouter() {
+	g := s.R.Group("/preview")
+
+	g.GET("/", s.PreviewGet)
 }
