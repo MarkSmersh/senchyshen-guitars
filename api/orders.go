@@ -12,9 +12,7 @@ import (
 func (s Server) OrdersGet(c *gin.Context) {
 	uuid := c.Param("uuid")
 
-	model := models.NewOrder(s.Conn)
-
-	order, err := model.Find(uuid)
+	order, err := s.Order.Find(uuid)
 
 	if err != nil {
 		var apierr models.ApiError

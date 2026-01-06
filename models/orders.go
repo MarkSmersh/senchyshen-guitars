@@ -5,14 +5,14 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Order struct {
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewOrder(conn *pgx.Conn) Order {
+func NewOrder(conn *pgxpool.Pool) Order {
 	return Order{conn: conn}
 }
 
@@ -98,48 +98,36 @@ func (o Order) Find(uuid string) (OrderModel, error) {
 		return order, InternalServerError()
 	}
 
+	order = OrderModel{}
+
 	for {
 		if !rows.Next() {
 			break
 		}
 
-		var uuid, tel, comment, title, description string
-		var pid, price, count int
+		// var uuid, tel, comment, title, description string
+		// var pid, price, count int
 		var imgUuid, ext sql.NullString
 
+		item := OrderItemModel{}
+
 		if err := rows.Scan(
-			&uuid, &tel, &comment, &pid, &title, &description, &price, &count, &imgUuid, &ext,
+			&order.UUID, &order.Tel, &order.Comment, &item.ProductID,
+			&item.Title, &item.Description, &item.Price, &item.Count,
+			&imgUuid, &ext,
 		); err != nil {
 			slog.Error(err.Error())
 			return order, InternalServerError()
 		}
 
-		if order.UUID == "" {
-			order = OrderModel{
-				UUID:    uuid,
-				Tel:     tel,
-				Comment: comment,
-				Items: []OrderItemModel{
-					{
-						ProductID:   pid,
-						Title:       title,
-						Description: description,
-						Price:       price,
-						Count:       count,
-					},
-				},
-			}
+		if len(order.Items) <= 0 {
+			order.Items = append(order.Items, item)
 		}
 
 		lastProduct := &order.Items[len(order.Items)-1]
 
-		if lastProduct.ProductID != pid {
-			order.Items = append(order.Items, OrderItemModel{
-				ProductID:   pid,
-				Title:       title,
-				Description: description,
-				Price:       price,
-			})
+		if lastProduct.ProductID != item.ProductID {
+			order.Items = append(order.Items, item)
 		}
 
 		if imgUuid.Valid && ext.Valid {

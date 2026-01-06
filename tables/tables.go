@@ -9,9 +9,10 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Init(conn *pgx.Conn) {
+func Init(conn *pgxpool.Pool) {
 	createTable(conn, Enums)
 	createTable(conn, Domains)
 
@@ -39,7 +40,7 @@ func Init(conn *pgx.Conn) {
 
 }
 
-func createTable(conn *pgx.Conn, query string) {
+func createTable(conn *pgxpool.Pool, query string) {
 	_, err := conn.Exec(context.Background(), query)
 
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {

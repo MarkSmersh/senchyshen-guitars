@@ -2,7 +2,7 @@ import { request } from '$lib';
 
 export type ProductType = 'guitar' | 'pickup' | 'bodyshape' | 'amplifier' | 'crafted';
 
-interface ProductSearch {
+export interface ProductSearch {
 	page?: number;
 	limit?: number;
 	types?: ProductType[];
@@ -11,19 +11,66 @@ interface ProductSearch {
 	category?: number;
 	id?: number;
 	// title, price, createdAt
-	orderBy?: 'title' | 'price' | 'createdAt';
+	orderBy?: OrderBy;
 	// desc | asc
 	order?: 'desc' | 'asc';
 	query?: string;
 }
 
-export async function getProducts(p: ProductSearch): Promise<ProductModel[]> {
-	const res = await request('/api/products', 'POST', JSON.stringify(p));
+export type OrderBy = 'title' | 'price' | 'createdAt';
+export type Order = 'desc' | 'asc';
 
-	const body: ProductModel[] = await res.json();
+export interface ProductSearchRes {
+	products: ProductModel[];
+	categories: Category[];
+	types?: string[];
+	priceMin: number;
+	priceMax: number;
+}
+
+export async function getProducts(p: ProductSearch): Promise<ProductSearchRes | undefined> {
+	const res = await request('/api/products/', 'POST', JSON.stringify(p));
+
+	if (res.status > 399) {
+		const resCopy = res.clone();
+		const text = await resCopy.text();
+		console.log(text);
+		return undefined;
+	}
+
+	const body: ProductSearchRes = await res.json();
 
 	return body;
 }
+
+export async function getProduct(id: number): Promise<ProductModel | undefined> {
+	const res = await request('/api/products/' + id);
+
+	if (res.status > 399) {
+		const resCopy = res.clone();
+		const text = await resCopy.text();
+		console.log(text);
+		return undefined;
+	}
+
+	const body: ProductModel = await res.json();
+
+	return body;
+}
+
+export interface Category {
+	id: number;
+	title: string;
+	description: string;
+	image?: string;
+}
+
+export type ProductDetails =
+	| keyof GuitarModel
+	| keyof PickupModel
+	| keyof AmplifierModel
+	| keyof CraftedModel
+	| keyof BodyshapeModel;
 
 export interface GuitarModel {
 	stringsCount: number;

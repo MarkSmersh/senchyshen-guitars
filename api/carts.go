@@ -47,11 +47,6 @@ func (s Server) CartsDelete(c *gin.Context) {
 
 	pid := c.Param("pid")
 
-	// if err := c.BindJSON(&req); err != nil {
-	// 	c.String(400, "Nieprawidlowe żądanie")
-	// 	return
-	// }
-
 	err := s.Cart.RemoveProduct(cartUuid, pid)
 
 	if err != nil {
@@ -61,4 +56,18 @@ func (s Server) CartsDelete(c *gin.Context) {
 	}
 
 	c.String(200, "Produkt jest usunięto")
+}
+
+func (s Server) CartsPut(c *gin.Context) {
+	cartUuid, _ := utils.GetCart(c, s.Conn)
+
+	err := s.Cart.Clear(cartUuid)
+
+	if err != nil {
+		slog.Error(err.Error())
+		c.String(400, err.Error())
+		return
+	}
+
+	c.String(200, "Koszyk jest wyczyszczono")
 }

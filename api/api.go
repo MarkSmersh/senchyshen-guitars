@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/MarkSmersh/senchyshen-guitars/tables"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func Init() {
@@ -18,7 +18,7 @@ func Init() {
 		os.Exit(1)
 	}
 
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_URL"))
+	conn, err := pgxpool.New(context.Background(), os.Getenv("DB_URL"))
 
 	if err != nil {
 		slog.Error(err.Error())

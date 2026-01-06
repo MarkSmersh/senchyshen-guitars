@@ -2,7 +2,7 @@ import { env } from '$env/dynamic/public';
 
 export async function request(
 	url: string,
-	method: 'GET' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
+	method: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT' = 'GET',
 	body: string | null = null
 ) {
 	const res = await fetch(env.PUBLIC_SERVER + url, {
@@ -12,7 +12,9 @@ export async function request(
 					'Content-Type': 'application/json'
 				}
 			: {},
-		body: body
+		body: body,
+		mode: 'cors',
+		credentials: 'include'
 	});
 
 	// const text = await res.json();

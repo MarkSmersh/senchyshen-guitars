@@ -5,15 +5,15 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Image struct {
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewImage(conn *pgx.Conn) Image {
+func NewImage(conn *pgxpool.Pool) Image {
 	return Image{conn: conn}
 }
 

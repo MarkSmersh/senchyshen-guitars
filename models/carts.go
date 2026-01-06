@@ -5,14 +5,14 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Cart struct {
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewCart(conn *pgx.Conn) Cart {
+func NewCart(conn *pgxpool.Pool) Cart {
 	return Cart{conn: conn}
 }
 
@@ -35,7 +35,7 @@ func (c Cart) Create() (string, error) {
 func (c Cart) Clear(uuid string) error {
 	_, err := c.conn.Exec(
 		context.Background(),
-		"delete from carts_items where cart_id = $1",
+		"delete from carts_items where cart_id = (select id from carts where uuid = $1)",
 		uuid,
 	)
 
@@ -98,13 +98,14 @@ type GetProductsModel struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Image       string `json:"image"`
+	Type        string `json:"type"`
 }
 
 func (c Cart) GetProducts(uuid string) ([]GetProductsModel, error) {
 	rows, err := c.conn.Query(
 		context.Background(),
 		`
-		select ci.product_id, SUM(ci.count*p.price), SUM(ci.count), p.price, p.title, p.description, i.uuid, i.ext from carts c join carts_items ci on ci.cart_id = c.id join products p on p.id = ci.product_id left join products_images pi on pi.product_id = p.id left join lateral (select uuid, ext from images i where i.id = pi.image_id limit 1) i on true where c.uuid = $1 group by ci.product_id, p.title, p.description, i.uuid, i.ext, p.price
+		select ci.product_id, SUM(ci.count*p.price), SUM(ci.count), p.price, p.title, p.description, i.uuid, i.ext, p.type from carts c join carts_items ci on ci.cart_id = c.id join products p on p.id = ci.product_id left join lateral (select * from products_images where product_id = p.id limit 1) pi on true left join images i on i.id = pi.image_id where c.uuid = $1 group by ci.product_id, p.title, p.description, i.uuid, i.ext, p.price, p.type
 		`,
 		uuid,
 	)
@@ -126,7 +127,7 @@ func (c Cart) GetProducts(uuid string) ([]GetProductsModel, error) {
 		var uuid, ext sql.NullString
 
 		if err := rows.Scan(
-			&p.ID, &p.Total, &p.Count, &p.Price, &p.Title, &p.Description, &uuid, &ext,
+			&p.ID, &p.Total, &p.Count, &p.Price, &p.Title, &p.Description, &uuid, &ext, &p.Type,
 		); err != nil {
 			slog.Error(err.Error())
 			return products, InternalServerError()

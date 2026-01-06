@@ -34,4 +34,18 @@
 		font-family: 'Lato', sans-serif;
 		font-style: normal;
 	}
+
+	:global(input) {
+		background: transparent;
+		border: 0;
+		color: var(--accent);
+	}
+
+	:global(input:focus) {
+		outline: none;
+	}
+
+	:global(input ::placeholder) {
+		color: var(--secondary);
+	}
 </style>

@@ -6,13 +6,21 @@
 	interface ButtonProps {
 		children: Snippet;
 		type?: ButtonStyle;
-		onclick: () => {};
+		formtype?: 'submit' | 'reset' | 'button';
+		onclick: () => void;
+		onsubmit?: () => void;
 	}
 
-	const { children, type = 'primary', onclick }: ButtonProps = $props();
+	const {
+		children,
+		type = 'primary',
+		formtype,
+		onclick,
+		onsubmit = () => {}
+	}: ButtonProps = $props();
 </script>
 
-<button {onclick} class={type}>
+<button type={formtype} {onsubmit} {onclick} class={type}>
 	{@render children()}
 </button>
 
@@ -27,6 +35,7 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		justify-content: center;
 	}
 
 	.primary {

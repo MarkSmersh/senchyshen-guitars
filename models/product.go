@@ -8,13 +8,14 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Product struct {
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewProduct(conn *pgx.Conn) Product {
+func NewProduct(conn *pgxpool.Pool) Product {
 	return Product{conn: conn}
 }
 
@@ -70,7 +71,22 @@ var order = []string{"desc", "asc"}
 // przy wprowadzeniu parametru pid > 0, zwraca tylko produkt z podanym id;
 // dla takich sytuacji jest wykorzystana metoda Find
 
-func (p Product) FindMany(params FindManyParams) ([]ProductModel, error) {
+type Category struct {
+	ID          int    `json:"id" db:"id"`
+	Title       string `json:"title" db:"title"`
+	Description string `json:"description,omitempty" db:"description"`
+	Image       string `json:"image,omitempty" db:"image"`
+}
+
+type ProductsFindMany struct {
+	Products   []ProductModel `json:"products"`
+	Categories []Category     `json:"categories"`
+	Types      []string       `json:"types"`
+	PriceMin   int            `json:"priceMin"`
+	PriceMax   int            `json:"priceMax"`
+}
+
+func (p Product) FindMany(params FindManyParams) (ProductsFindMany, error) {
 	switch params.OrderBy {
 	case "title":
 		break
@@ -99,11 +115,23 @@ func (p Product) FindMany(params FindManyParams) ([]ProductModel, error) {
 	// - idc, it just works
 
 	q := fmt.Sprintf(`
-WITH ROWS AS (
+	WITH prds AS (
+    SELECT
+        p.*
+    FROM
+        products p
+        LEFT JOIN products_categories pc ON pc.product_id = p.id
+    WHERE
+        CASE
+            WHEN $5 > 0 THEN pc.category_id = $5
+            ELSE TRUE
+        END
+),
+ROWS AS (
     SELECT
         id
     FROM
-        products
+        prds
     WHERE
         CASE
             WHEN $1 > 0 THEN id = $1
@@ -112,17 +140,20 @@ WITH ROWS AS (
                 WHEN $4 > 0 THEN price <= $4
                 ELSE TRUE
             END
-			AND ($2::text[] IS NULL OR type::text = ANY($2::text[]))
+            AND (
+                $2 :: text [] IS NULL
+                OR TYPE :: text = ANY($2 :: text [])
+            )
             AND CASE
-                WHEN $8 != '' THEN
-                to_tsvector(title || ' ' || description) @@ to_tsquery($8)
+                WHEN $8 != '' THEN to_tsvector(title || ' ' || description) @@ to_tsquery($8)
                 ELSE TRUE
             END
         END
         AND publish = TRUE
     ORDER BY
         %[1]s %[2]s
-		LIMIT $6 OFFSET $6::int * $7::int
+    LIMIT
+        $6 OFFSET $6 :: int * $7 :: int
 )
 SELECT
     p.id,
@@ -139,7 +170,31 @@ SELECT
     i.uuid,
     i.ext,
     c.id,
-    c.title
+    c.title,
+    array(
+        SELECT
+            json_build_object('id', id, 'title', title)
+        FROM
+            categories
+    ),
+    array (
+        SELECT
+            DISTINCT type
+        FROM
+            prds
+    ),
+    (
+        SELECT
+            min(price)
+        FROM
+            prds
+    ),
+    (
+        SELECT
+            max(price)
+        FROM
+            prds
+    )
 FROM
     products p
     LEFT JOIN products_images pi ON pi.product_id = p.id
@@ -153,13 +208,8 @@ WHERE
         FROM
             ROWS
     )
-    AND CASE
-        WHEN $5 > 0 THEN pc.category_id = $5
-        ELSE TRUE
-    END
 ORDER BY
     p.%[1]s %[2]s
-
 		`,
 		params.OrderBy, params.Order,
 	)
@@ -177,15 +227,18 @@ ORDER BY
 		params.Query,
 	)
 
-	products := []ProductModel{}
+	res := ProductsFindMany{
+		Products:   []ProductModel{},
+		Categories: []Category{},
+	}
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return products, NewApiError(404, "Dalej już produktów nie ma")
+			return res, NewApiError(404, "Dalej już produktów nie ma")
 		}
 
 		slog.Error(err.Error())
-		return products, InternalServerError()
+		return res, InternalServerError()
 	}
 
 	for {
@@ -204,13 +257,15 @@ ORDER BY
 		var iid, categoryId sql.NullInt32
 
 		if err := rows.Scan(
-			&pid, &title, &description, &price, &ptype, &createdAt, &iid, &uuid, &ext, &categoryId, &categoryTitle,
+			&pid, &title, &description, &price, &ptype, &createdAt,
+			&iid, &uuid, &ext, &categoryId, &categoryTitle,
+			&res.Categories, &res.Types, &res.PriceMin, &res.PriceMax,
 		); err != nil {
 			slog.Error(err.Error())
-			return products, InternalServerError()
+			return res, InternalServerError()
 		}
 
-		if len(products) <= 0 || products[(len(products)-1)].ID != pid {
+		if len(res.Products) <= 0 || res.Products[(len(res.Products)-1)].ID != pid {
 			p := ProductModel{
 				ID:            pid,
 				Title:         title,
@@ -223,10 +278,10 @@ ORDER BY
 				Images:        []ImageModel{},
 			}
 
-			products = append(products, p)
+			res.Products = append(res.Products, p)
 		}
 
-		var p ProductModel = products[len(products)-1]
+		var p ProductModel = res.Products[len(res.Products)-1]
 
 		if uuid.Valid {
 			p.Images = append(p.Images, ImageModel{
@@ -235,10 +290,10 @@ ORDER BY
 			})
 		}
 
-		products[len(products)-1] = p
+		res.Products[len(res.Products)-1] = p
 	}
 
-	return products, nil
+	return res, nil
 }
 
 type GuitarModel struct {
@@ -289,10 +344,12 @@ type ProductModel struct {
 }
 
 func (p Product) Find(id int) (ProductModel, error) {
-	products, err := p.FindMany(FindManyParams{
+	res, err := p.FindMany(FindManyParams{
 		Limit:     1,
 		ProductID: id,
 	})
+
+	products := res.Products
 
 	if err != nil {
 		return ProductModel{}, err
@@ -346,7 +403,7 @@ func (p Product) Find(id int) (ProductModel, error) {
 	case "crafted":
 		rows, err := p.conn.Query(
 			context.Background(),
-			"select c.bodyshape_id, c.color, cp.pickup_id, cp.position from products p join constructors c on c.product_id = p.id join constructors_pickups cp on cp.constructor_id = c.id where p.id = $1",
+			"select (select product_id from bodyshapes where id = c.bodyshape_id), c.color, cp.pickup_id, cp.position from products p join constructors c on c.product_id = p.id join constructors_pickups cp on cp.constructor_id = c.id where p.id = $1",
 			product.ID,
 		)
 

@@ -3,10 +3,10 @@ package utils
 import (
 	"github.com/MarkSmersh/senchyshen-guitars/models"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func GetCart(c *gin.Context, conn *pgx.Conn) (string, error) {
+func GetCart(c *gin.Context, conn *pgxpool.Pool) (string, error) {
 	cartId, err := c.Cookie("cart_id")
 
 	if err != nil {

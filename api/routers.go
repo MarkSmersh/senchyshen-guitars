@@ -9,6 +9,7 @@ func (s *Server) SetRouters() {
 	s.CartsRouter()
 	s.ConstuctorsRouter()
 	s.PreviewRouter()
+	s.CategoriesRouter()
 }
 
 func (s *Server) HealthyRouter() {
@@ -45,6 +46,7 @@ func (s *Server) CartsRouter() {
 
 	g.GET("/", s.CartsGet)
 	g.POST("/", s.CartsPost)
+	g.PUT("/", s.CartsPut)
 	g.DELETE("/:pid", s.CartsDelete)
 }
 
@@ -58,4 +60,10 @@ func (s *Server) PreviewRouter() {
 	g := s.R.Group("/preview")
 
 	g.GET("/", s.PreviewGet)
+}
+
+func (s *Server) CategoriesRouter() {
+	g := s.R.Group("/categories")
+
+	g.GET("/", s.CategoriesGet)
 }
