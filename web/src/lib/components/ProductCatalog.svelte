@@ -2,6 +2,7 @@
 	import type { ProductType as IProductType } from '$lib/api/products';
 	import IconType from './IconType.svelte';
 	import Image from './Image.svelte';
+	import ImageSwap from './ImageSwap.svelte';
 	import Price from './Price.svelte';
 	import ProductType from './ProductType.svelte';
 
@@ -13,33 +14,12 @@
 		price: number;
 	}
 
-	let image = $state(0);
-	let container: HTMLDivElement | undefined = $state();
-
-	function swapImage(e: MouseEvent) {
-		if (container) {
-			const parent = container.getBoundingClientRect();
-
-			const perBlock = parent.width / images.length;
-			const x = Math.floor((e.clientX - parent.left) / perBlock);
-
-			image = x;
-		}
-	}
-
 	const { id, images, type, price, title }: PreviewProductsProps = $props();
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions, a11y_mouse_events_have_key_events -->
 <div class="container">
-	<div
-		bind:this={container}
-		class="image-container"
-		onmousemove={(e) => swapImage(e)}
-		onmouseleave={() => (image = 0)}
-	>
-		<Image src={images[image]} alt={title} />
-	</div>
+	<ImageSwap {images} />
 	<div class="data">
 		<a href={'/products/' + id}><h4>{title}</h4></a>
 		<div class="type">
@@ -63,13 +43,6 @@
 		flex-direction: column;
 		transition: 0.2s;
 
-		.image-container {
-			aspect-ratio: 1 / 1;
-			background: var(--secondary);
-			width: 100%;
-			display: flex;
-		}
-
 		.data {
 			padding: 8px 4px;
 			display: flex;
@@ -87,6 +60,9 @@
 			a {
 				color: var(--primary);
 				text-decoration: none;
+				/* overflow-x: hidden; */
+				/* text-overflow: ellipsis; */
+				/* white-space: nowrap; */
 			}
 
 			.type {

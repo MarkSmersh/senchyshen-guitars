@@ -48,17 +48,19 @@
 	</section>
 	<section id="sec-3">
 		<h3>Również rekomendujemy</h3>
-		<div class="products">
-			{#each data.products as p}
-				<PreviewProduct
-					id={p.id}
-					type={p.type}
-					title={p.title}
-					price={p.price}
-					image={p.images.length > 0 ? p.images[0].path : ''}
-				/>
-			{/each}
-		</div>
+		{#if data.products}
+			<div class="products">
+				{#each data.products as p}
+					<PreviewProduct
+						id={p.id}
+						type={p.type}
+						title={p.title}
+						price={p.price}
+						images={p.images.map((i) => i.path)}
+					/>
+				{/each}
+			</div>
+		{/if}
 		<div class="catalog">
 			<p>Lub wybierz z</p>
 			<Button onclick={() => goto('/catalog')} type="accent">

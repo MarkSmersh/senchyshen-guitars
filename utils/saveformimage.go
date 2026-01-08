@@ -27,13 +27,11 @@ func SaveFormImage(header multipart.FileHeader, dir string) (string, string, err
 
 	ext := filename[1]
 
-	acceptedExtension := []string{"webp", "jpg", "png", "jpeg"}
-
-	if !slices.Contains(acceptedExtension, ext) {
+	if !slices.Contains(AcceptedExtension, ext) {
 		return "", "", errors.New(
 			fmt.Sprintf(
-				"Rozszerzenie nie jest przyjmowany. Dozwolone roszenia to: %s",
-				strings.Join(acceptedExtension, ", "),
+				"Rozszerzenie nie jest przyjmowane. Dozwolone roszenia to: %s",
+				strings.Join(AcceptedExtension, ", "),
 			),
 		)
 	}

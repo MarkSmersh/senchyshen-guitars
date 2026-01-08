@@ -9,21 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ProductPostReq struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
-
-func (s Server) ProductsPost(c *gin.Context) {
-	products := []ProductPostReq{}
-
-	if err := c.BindJSON(&products); err != nil {
-		slog.Error(err.Error())
-
-		c.String(400, "Unable to create products. Required fields: title, description")
-	}
-}
-
 // am i cooked?
 
 func (s Server) ProductsGet(c *gin.Context) {

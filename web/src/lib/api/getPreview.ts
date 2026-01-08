@@ -6,7 +6,7 @@ interface PreviewData {
 }
 
 export async function getPreview(): Promise<PreviewData | undefined> {
-	const res = await request(`/api/preview`, 'GET');
+	const res = await request(`/api/preview/`, 'GET');
 
 	const body: PreviewData = await res.json();
 

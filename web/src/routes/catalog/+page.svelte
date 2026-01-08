@@ -193,16 +193,17 @@
 <style>
 	main {
 		padding: 100px 20px;
-		display: flex;
+		display: grid;
 		gap: 20px;
 		position: relative;
+		grid: auto / 1fr 3fr;
 
 		h1 {
 			font-size: 24px;
 		}
 
 		.filter-container {
-			width: 80%;
+			/* width: 80%; */
 			display: flex;
 			flex-direction: column;
 			gap: 15px;
@@ -215,7 +216,6 @@
 		}
 
 		.catalog-container {
-			width: 200%;
 			display: flex;
 			flex-direction: column;
 			gap: 15px;
@@ -229,7 +229,7 @@
 
 				.products {
 					display: grid;
-					grid: auto / repeat(4, 1fr);
+					grid: auto / repeat(4, minmax(0, 1fr));
 					padding: 10px;
 					gap: 10px;
 				}

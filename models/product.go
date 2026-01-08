@@ -19,34 +19,107 @@ func NewProduct(conn *pgxpool.Pool) Product {
 	return Product{conn: conn}
 }
 
-type ProductData struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
-
-func (p Product) Create(title string, description string, price float64) error {
-	tag, err := p.conn.Exec(
+func (p Product) Create(params ProductModel) (int, error) {
+	row := p.conn.QueryRow(
 		context.Background(),
-		"INSERT INTO products (title, description, price)",
-		title,
-		description,
-		price,
+		`
+INSERT INTO
+    products (type, title, description, price)
+VALUES
+    ($1, $2, $3, $4) returning id
+		`,
+		params.Type,
+		params.Title,
+		params.Description,
+		params.Price,
 	)
 
+	var id int
+
+	err := row.Scan(&id)
+
 	if err != nil {
-		return InternalServerError()
+		slog.Error(err.Error())
+		return id, InternalServerError()
 	}
 
-	if tag.RowsAffected() <= 0 {
-		return NewApiError(500, "Produkt nie jest stworzony.")
+	switch params.Type {
+	case "guitar":
+		_, err = p.conn.Exec(
+			context.Background(),
+			`
+insert into guitars
+(product_id, strings_count, bodyshape, color, pickups_count)
+values ($1, $2, $3, $4, $5)
+			`,
+			id,
+			params.Guitar.StringCount,
+			params.Guitar.Bodyshape,
+			params.Guitar.Color,
+			params.Guitar.PickupsCount,
+		)
+	case "amplifier":
+		_, err = p.conn.Exec(
+			context.Background(),
+			`
+insert into amplifiers (product_id, power) select $1, * from json_to_record($2) as x (power int)
+`,
+			id, params.Amplifier,
+		)
+	case "bodyshape":
+		_, err = p.conn.Exec(
+			context.Background(),
+			`
+insert into bodyshapes
+(product_id, color, material, height, width, thickness, pickups_count)
+values ($1, $2, $3, $4, $5, $6, $7)
+			`,
+			id,
+			params.Bodyshape.Color,
+			params.Bodyshape.Material,
+			params.Bodyshape.Height,
+			params.Bodyshape.Width,
+			params.Bodyshape.Thickness,
+			params.Bodyshape.PickupsCount,
+		)
+
+	case "pickup":
+		_, err = p.conn.Exec(
+			context.Background(),
+			`
+insert into pickups (product_id, type) values ($1, $2)
+			`,
+			id,
+			params.Pickup.Type,
+		)
+	default:
+		err = errors.New("Wykorzystany niestniejący typ produktu")
 	}
 
-	return nil
+	if err != nil {
+		slog.Error(err.Error())
+
+		_, err = p.conn.Exec(
+			context.Background(),
+			"delete from products where id = $1",
+			id,
+		)
+
+		if err != nil {
+			slog.Error(err.Error())
+		}
+
+		return id, InternalServerError()
+	}
+
+	return id, nil
 }
 
 type ImageModel struct {
 	ID   int    `json:"id"`
 	Path string `json:"path"`
+	// used exclusively while adding images via endpoins
+	Url string `json:"url,omitempty"`
 }
 
 type FindManyParams struct {

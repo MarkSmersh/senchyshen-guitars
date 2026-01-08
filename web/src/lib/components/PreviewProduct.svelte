@@ -2,24 +2,23 @@
 	import type { ProductType as IProductType } from '$lib/api/products';
 	import IconType from './IconType.svelte';
 	import Image from './Image.svelte';
+	import ImageSwap from './ImageSwap.svelte';
 	import Price from './Price.svelte';
 	import ProductType from './ProductType.svelte';
 
 	interface PreviewProductsProps {
 		id: number;
-		image: string;
+		images: string[];
 		title: string;
 		type: IProductType;
 		price: number;
 	}
 
-	const { id, image, type, price, title }: PreviewProductsProps = $props();
+	const { id, images, type, price, title }: PreviewProductsProps = $props();
 </script>
 
 <div class="container">
-	<div class="image-container">
-		<Image src={image} alt={title} />
-	</div>
+	<ImageSwap {images} />
 	<div class="data">
 		<a href={'/products/' + id}><h4>{title}</h4></a>
 		<div class="type">
