@@ -28,7 +28,7 @@
 		<div class="details">
 			<h4>Szczegóły:</h4>
 			<div class="container">
-				<ProductDetails product={data} />
+				<ProductDetails details={data[data.type]} />
 			</div>
 		</div>
 		<div class="bottom">

@@ -79,7 +79,7 @@ func (i Image) CategoryCreate(uuid string, ext string, categoryId string) error 
 
 	_, err = i.conn.Exec(
 		context.Background(),
-		`UPDATE products_images SET image_id = $1 WHERE id = $2`,
+		`UPDATE categories SET image_id = $1 WHERE id = $2`,
 		imageId,
 		categoryId,
 	)

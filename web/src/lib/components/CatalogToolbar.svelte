@@ -25,13 +25,15 @@
 	let order = $state(orders[0]);
 	let q = $state('');
 
-	function update() {
+	function update(): boolean {
 		onupdate({
 			query: q,
 			order: order,
 			orderBy: orderBy,
 			limit: limit
 		});
+
+		return true;
 	}
 </script>
 

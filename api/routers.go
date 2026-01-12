@@ -55,6 +55,7 @@ func (s *Server) ConstuctorsRouter() {
 	g := s.R.Group("/constructors")
 
 	g.POST("/", s.ConstructorsPost)
+	g.GET("/", s.ConstructorsPost)
 }
 
 func (s *Server) PreviewRouter() {
@@ -72,5 +73,6 @@ func (s *Server) CategoriesRouter() {
 func (s *Server) AdminRouter() {
 	g := s.R.Group("/admin")
 
-	g.POST("/products", s.ProductsPost)
+	g.POST("/products/", s.ProductsPost)
+	g.POST("/categories/", s.CategoriesPost)
 }

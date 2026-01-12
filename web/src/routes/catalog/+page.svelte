@@ -1,12 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import {
-		getProducts,
-		type Order,
-		type OrderBy,
-		type ProductSearchRes,
-		type ProductType
-	} from '$lib/api/products';
+	import { getProducts, type Order, type OrderBy, type ProductType } from '$lib/api/products';
 	import CatalogToolbar, { type CatalogToolbarEvent } from '$lib/components/CatalogToolbar.svelte';
 	import Checklist, { type ChecklistItem } from '$lib/components/Checklist.svelte';
 	import ProductCatalog from '$lib/components/ProductCatalog.svelte';

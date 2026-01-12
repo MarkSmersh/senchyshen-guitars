@@ -3,7 +3,7 @@
 		items: string[];
 		item: string;
 		title: string;
-		onupdate?: () => void;
+		onupdate?: (item: string) => void;
 		translateWith?: (value: string) => string;
 	}
 
@@ -18,7 +18,7 @@
 
 <div class="dropdown">
 	<p>{title}</p>
-	<select bind:value={item} onchange={() => onupdate()}>
+	<select bind:value={item} onchange={() => onupdate(item)}>
 		{#each items as i}
 			<option value={i}>{translateWith(i)}</option>
 		{/each}

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Component } from 'svelte';
 	import Checkbox from './Checkbox.svelte';
 
 	export interface ChecklistItem {

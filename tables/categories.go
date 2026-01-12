@@ -12,6 +12,6 @@ package tables
 const CategoriesTable = `create table if not exists categories (
 	id bigserial primary key,
 	image_id bigint references images(id) on delete set null,
-	title text not null,
+	title text not null unique,
 	description text not null
 )`

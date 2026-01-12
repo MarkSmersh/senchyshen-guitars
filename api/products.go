@@ -26,9 +26,7 @@ func (s Server) ProductsGet(c *gin.Context) {
 		return
 	}
 
-	model := models.NewProduct(s.Conn)
-
-	products, err := model.FindMany(req)
+	products, err := s.Product.FindMany(req)
 
 	if err != nil {
 		var apierr models.ApiError

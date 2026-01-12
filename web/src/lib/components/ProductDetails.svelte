@@ -4,24 +4,22 @@
 	import Color from './Color.svelte';
 	import Icon from './Icon.svelte';
 
-	const { product }: { product: ProductModel } = $props();
-
-	const productDetails = $derived(product[product.type]);
+	const { details }: { details: ProductModel[ProductModel['type']] } = $props();
 </script>
 
-{#if productDetails}
+{#if details}
 	<div class="details">
-		{#each Object.keys(productDetails) as ProductDetails[] as detail}
+		{#each Object.keys(details) as ProductDetails[] as detail}
 			<div class="detail">
 				<ProductDetail name={detail} />
-				{#if 'color' in productDetails && detail == 'color'}
-					{@const value = productDetails['color']}
+				{#if 'color' in details && detail == 'color'}
+					{@const value = details['color']}
 					<div class="color" title={'#' + value}>
 						<Color size={20} color={value} />
-						<!-- <p>{productDetails['color']}</p> -->
+						<!-- <p>{details['color']}</p> -->
 					</div>
-				{:else if 'bodyshapeId' in productDetails && detail == 'bodyshapeId'}
-					{@const value = productDetails['bodyshapeId']}
+				{:else if 'bodyshapeId' in details && detail == 'bodyshapeId'}
+					{@const value = details['bodyshapeId']}
 					<div class="bodyshape">
 						<Icon name="bodyshapes" height={20} alt />
 						<p>
@@ -29,8 +27,8 @@
 							<a href={'/products/' + value}>{value}</a>
 						</p>
 					</div>
-				{:else if 'pickups' in productDetails && detail == 'pickups'}
-					{@const value = productDetails['pickups']}
+				{:else if 'pickups' in details && detail == 'pickups'}
+					{@const value = details['pickups']}
 					<div class="pickups">
 						{#each value as p}
 							<div class="pickup">
@@ -43,13 +41,13 @@
 							</div>
 						{/each}
 					</div>
-				{:else if 'power' in productDetails && detail == 'power'}
-					{@const value = productDetails['power']}
+				{:else if 'power' in details && detail == 'power'}
+					{@const value = details['power']}
 					<p>
 						{value} W
 					</p>
 				{:else}
-					<p>{(productDetails as any)[detail]}</p>
+					<p>{(details as any)[detail]}</p>
 				{/if}
 			</div>
 		{/each}

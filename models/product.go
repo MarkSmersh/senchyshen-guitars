@@ -188,17 +188,14 @@ func (p Product) FindMany(params FindManyParams) (ProductsFindMany, error) {
 	// - idc, it just works
 
 	q := fmt.Sprintf(`
-	WITH prds AS (
-    SELECT
+WITH prds AS (
+    select distinct
         p.*
-    FROM
+    from
         products p
-        LEFT JOIN products_categories pc ON pc.product_id = p.id
-    WHERE
-        CASE
-            WHEN $5 > 0 THEN pc.category_id = $5
-            ELSE TRUE
-        END
+        left join products_categories pc on pc.product_id = p.id
+    where
+		($5 <= 0 or pc.category_id = $5)
 ),
 ROWS AS (
     SELECT
@@ -209,24 +206,22 @@ ROWS AS (
         CASE
             WHEN $1 > 0 THEN id = $1
             ELSE price >= $3
-            AND CASE
-                WHEN $4 > 0 THEN price <= $4
-                ELSE TRUE
-            END
+			AND (
+				$4 <= 0 OR price <= $4
+			)
             AND (
                 $2 :: text [] IS NULL
                 OR TYPE :: text = ANY($2 :: text [])
             )
-            AND CASE
-                WHEN $8 != '' THEN to_tsvector(title || ' ' || description) @@ to_tsquery($8)
-                ELSE TRUE
-            END
+			AND (
+				$8 = '' OR to_tsvector(title || ' ' || description) @@ websearch_to_tsquery($8)
+			)
         END
         AND publish = TRUE
     ORDER BY
         %[1]s %[2]s
     LIMIT
-        $6 OFFSET $6 :: int * $7 :: int
+        $6 OFFSET $6::int * $7::int
 )
 SELECT
     p.id,
@@ -270,10 +265,10 @@ SELECT
     )
 FROM
     products p
-    LEFT JOIN products_images pi ON pi.product_id = p.id
-    LEFT JOIN images i ON i.id = pi.image_id
     LEFT JOIN products_categories pc ON pc.product_id = p.id
     LEFT JOIN categories c ON c.id = pc.category_id
+    LEFT JOIN products_images pi ON pi.product_id = p.id
+    LEFT JOIN images i ON i.id = pi.image_id
 WHERE
     p.id IN (
         SELECT
@@ -476,7 +471,7 @@ func (p Product) Find(id int) (ProductModel, error) {
 	case "crafted":
 		rows, err := p.conn.Query(
 			context.Background(),
-			"select (select product_id from bodyshapes where id = c.bodyshape_id), c.color, cp.pickup_id, cp.position from products p join constructors c on c.product_id = p.id join constructors_pickups cp on cp.constructor_id = c.id where p.id = $1",
+			"select (select product_id from bodyshapes where id = c.bodyshape_id), c.color, pi.product_id, cp.position from products p join constructors c on c.product_id = p.id join constructors_pickups cp on cp.constructor_id = c.id join pickups pi on pi.id = cp.pickup_id where p.id = $1",
 			product.ID,
 		)
 

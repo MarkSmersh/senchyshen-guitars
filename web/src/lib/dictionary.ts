@@ -1,12 +1,4 @@
-import type {
-	GuitarModel,
-	Order,
-	OrderBy,
-	ProductDetails,
-	ProductModel,
-	Products,
-	ProductType
-} from './api/products';
+import type { Order, OrderBy, ProductDetails, ProductType } from './api/products';
 
 export const OrderToName: Record<Order, string> = {
 	asc: 'Rosnąca',

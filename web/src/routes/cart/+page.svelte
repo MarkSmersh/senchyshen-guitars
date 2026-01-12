@@ -61,6 +61,7 @@
 						price={i.price}
 						title={i.title}
 						onremove={(id) => removeItem(id)}
+						onclick={() => goto('/products/' + i.id)}
 					/>
 				{/each}
 			{:else}

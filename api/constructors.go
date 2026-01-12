@@ -2,6 +2,8 @@ package api
 
 import (
 	"errors"
+	"fmt"
+	"math/rand"
 
 	"github.com/MarkSmersh/senchyshen-guitars/api/utils"
 	"github.com/MarkSmersh/senchyshen-guitars/models"
@@ -18,9 +20,9 @@ func (s Server) ConstructorsPost(c *gin.Context) {
 		return
 	}
 
-	if len(params.Title) <= 0 {
-		c.String(400, "Brak nazwy guitary")
-		return
+	if params.Title == "" {
+		nr := rand.Float32() * 999999
+		params.Title = fmt.Sprintf("Gitara #%.0f", nr)
 	}
 
 	if params.Color == "" {
@@ -93,3 +95,8 @@ func (s Server) ConstructorsPost(c *gin.Context) {
 
 	c.String(201, "Stworzono guitarę oraz dodano ją do koszyka")
 }
+
+// maksymalna ilość przetworników, cena dodatkowna
+// func (s *Server) ConstructorsGet(c *gin.Context) {
+// 	s.Product.
+// }

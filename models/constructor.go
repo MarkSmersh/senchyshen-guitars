@@ -16,6 +16,7 @@ type ConstructorCreate struct {
 	BodyshapeID int      `json:"bodyshapeId"`
 	Pickups     []Pickup `json:"pickups"`
 	Color       string   `json:"color"`
+	Publish     bool     `json:"publish"`
 }
 
 var Positions = []string{"top", "middle", "bottom"}
@@ -23,7 +24,7 @@ var Positions = []string{"top", "middle", "bottom"}
 // Tworzy produkt o typu "crafted", podlicza automatycznie cenę na podstawie wprowadzonych
 // danych o przetwornika itd. Zwraza identyfikator swieżostworzonego produktu.
 func (c Product) CreateConstructor(params ConstructorCreate) (int, error) {
-	deposit := 1000
+	deposit := 1000 * 100
 	description := "Guitara stworzona przez constuctor"
 
 	pickupIDs := []int{}
@@ -57,7 +58,7 @@ WITH pkps AS (
         row_number() over () AS rn
     FROM
 		unnest ($1::bigint[]) AS ids(id)
-        JOIN pickups pi ON pi.id = ids.id
+        JOIN pickups pi ON pi.product_id = ids.id
         JOIN products p ON p.id = pi.product_id
 
 ),
@@ -76,7 +77,7 @@ prds AS (
             bodyshapes b
             JOIN products p ON p.id = b.product_id
         WHERE
-            b.id = $2
+            b.product_id = $2
     )
 ),
 prd AS (
@@ -93,7 +94,7 @@ prd AS (
                 FROM
                     prds
             ),
-            false
+            $8
         ) returning id
 ),
 con AS (
@@ -107,7 +108,7 @@ con AS (
                 FROM
                     prd
             ),
-            $2,
+            (select id from bodyshapes b where b.product_id = $2),
             $6
         ) returning id
 ),
@@ -130,6 +131,12 @@ cp AS (
                     $7 :: pickup_pos []
                 ) AS position
         ) pos ON pos.rn = pkps.rn
+),
+imgs as (
+	insert into products_images (product_id, image_id)
+	select (select id from prd), pi.image_id
+	from products_images pi
+	where pi.product_id = $2
 )
 SELECT
     id
@@ -144,6 +151,7 @@ FROM
 		deposit,
 		params.Color,
 		positions,
+		params.Publish,
 	)
 
 	var pid int

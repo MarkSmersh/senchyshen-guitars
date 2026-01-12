@@ -89,7 +89,7 @@ export interface AmplifierModel {
 
 export interface Pickup {
 	pickupId: number;
-	position: string;
+	position: Position;
 }
 
 export interface CraftedModel {
@@ -132,3 +132,5 @@ export interface ProductModel {
 	amplifier?: AmplifierModel;
 	crafted?: CraftedModel;
 }
+
+export type Position = 'top' | 'middle' | 'bottom';
