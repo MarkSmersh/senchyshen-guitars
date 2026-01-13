@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY /web .
 
+RUN npm i
+
 RUN npm run build
 
 FROM gcr.io/distroless/nodejs24-debian12
