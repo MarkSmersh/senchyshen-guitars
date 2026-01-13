@@ -10,7 +10,12 @@ FROM gcr.io/distroless/static-debian12
 
 COPY --from=golang /main .
 
-# EXPOSE 1488
+ENV DB_URL=postgres://ss:445552@localhost:5432/senchyshen_guitars
+ENV GIN_MODE=release
+
+VOLUME ["/assets"]
+
+EXPOSE 3000
 
 CMD ["/main"]
 
