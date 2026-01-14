@@ -18,4 +18,3 @@ VOLUME ["/assets"]
 EXPOSE 3000
 
 CMD ["/main"]
-

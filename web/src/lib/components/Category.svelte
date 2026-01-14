@@ -39,10 +39,12 @@
 
 		a {
 			color: var(--primary);
+			width: 70%;
 		}
 
 		p {
 			color: var(--secondary);
+			width: 70%;
 		}
 
 		.circle {
